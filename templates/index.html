@@ -3,72 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Predicción de retrasos en entregas</title>
+<title>Logistics Intelligence | Riesgo de entregas</title>
 <style>
-body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:20px;line-height:1.5}
-.card{border:1px solid #ddd;border-radius:12px;padding:24px}
-form{display:grid;gap:14px}
-label{font-weight:600}
-input,select,button{padding:10px;font-size:16px;width:100%;box-sizing:border-box}
-button{cursor:pointer}
-#resultado{margin-top:24px;padding:16px;border:1px solid #ddd;border-radius:10px}
-.nota{font-size:14px;background:#f5f5f5;padding:12px;border-radius:8px}
+:root{--navy:#14243a;--blue:#2563eb;--bg:#f3f6fb;--muted:#64748b;--line:#e2e8f0;--green:#16a34a;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#172033;font:15px/1.5 Inter,Arial,sans-serif}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.sidebar{background:var(--navy);color:#e5edf7;padding:28px 18px}.brand{font-size:17px;font-weight:800;letter-spacing:.04em;margin-bottom:38px}.brand small{display:block;font-size:11px;color:#9fb2cb;font-weight:500;margin-top:4px}.nav-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#94a9c4;margin:22px 10px 10px}.nav-item{padding:11px 12px;border-radius:8px;color:#c9d6e7;margin:4px 0}.nav-item.active{background:#263b57;color:#fff}.sidebar-note{font-size:12px;color:#9fb2cb;margin:36px 10px 0}
+main{padding:32px;max-width:1400px;width:100%;margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:26px}.eyebrow{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}.top h1{margin:5px 0 0;font-size:28px}.pill{background:#e0ecff;color:#1d4ed8;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:700}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}.stat,.panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 3px 12px #0f172a08}.stat{padding:19px}.stat-head{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}.num{font-size:30px;font-weight:800;margin-top:12px}.hint{font-size:12px;color:var(--muted);margin-top:3px}
+.columns{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:20px}.panel{padding:24px}.panel h2{font-size:18px;margin:0 0 5px}.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:15px}label{font-size:13px;font-weight:700;color:#334155}label span{display:block;margin-bottom:6px}input,select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#172033;font:inherit}input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--blue)}.wide{grid-column:1/-1}button{border:0;border-radius:9px;padding:13px 16px;background:var(--blue);color:white;font-weight:800;font-size:14px;cursor:pointer}button:disabled{opacity:.65;cursor:wait}
+.result-box{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:20px;min-height:180px}.result-box h3{margin:0 0 8px}.result-main{font-size:24px;font-weight:800}.risk-low{color:var(--green)}.risk-high{color:var(--red)}.risk-mid{color:var(--amber)}.probbar{height:10px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:12px 0}.probfill{height:100%;width:0;background:var(--red);transition:width .3s}.result-meta{font-size:13px;color:var(--muted)}
+.critical{margin-top:20px}.critical table{width:100%;border-collapse:collapse;font-size:13px}.critical th,.critical td{text-align:left;border-bottom:1px solid var(--line);padding:11px 7px}.critical th{color:var(--muted);font-weight:600}.empty{text-align:center;color:var(--muted);padding:20px 8px}.notice{margin-top:20px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:14px 16px;border-radius:10px;font-size:12px}
+@media(max-width:1000px){.stats{grid-template-columns:repeat(2,1fr)}.columns{grid-template-columns:1fr}}@media(max-width:650px){.layout{grid-template-columns:1fr}.sidebar{padding:16px}.brand{margin-bottom:12px}.nav-label,.nav-item,.sidebar-note{display:none}main{padding:18px}.top{align-items:flex-start}.top h1{font-size:23px}.stats{gap:10px}.stat{padding:14px}.num{font-size:25px}.panel{padding:18px}form{grid-template-columns:1fr}.wide{grid-column:auto}}
 </style>
 </head>
 <body>
-<div class="card">
-<h1>Predicción de retrasos en entregas</h1>
-<p class="nota">Modelo académico de referencia. Incluye <code>Days for shipping (real)</code>, por lo que esta variable representa información ex-post.</p>
-<form id="formulario">
-<label>Shipping Mode
-<select name="shipping_mode">
-<option>Standard Class</option><option>Second Class</option><option>First Class</option><option>Same Day</option>
-</select></label>
-<label>Días de envío programados
-<input name="scheduled_days" type="number" min="0" step="0.1" value="4" required></label>
-<label>Días reales de envío
-<input name="real_days" type="number" min="0" step="0.1" value="5" required></label>
-<label>Customer Segment
-<select name="customer_segment">
-<option>Consumer</option><option>Corporate</option><option>Home Office</option>
-</select></label>
-<label>Type
-<select name="order_type">
-<option>DEBIT</option><option>TRANSFER</option><option>PAYMENT</option><option>CASH</option>
-</select></label>
-<button id="submit" type="submit">PREDECIR</button>
-</form>
-<div id="resultado" aria-live="polite">Ingrese los datos y presione PREDECIR.</div>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">◉ LOGISTICS INTELLIGENCE<small>PLATAFORMA DE ANÁLISIS</small></div>
+  <div class="nav-label">Operaciones</div>
+  <div class="nav-item active">▦ &nbsp; Resumen de riesgo</div>
+  <div class="nav-item">⌕ &nbsp; Evaluar pedido</div>
+  <div class="nav-label">Modelo</div>
+  <div class="nav-item">◎ &nbsp; Predicción neuronal</div>
+  <div class="sidebar-note">Proyecto académico · Predicción de retrasos en entregas</div>
+</aside>
+<main>
+  <header class="top">
+    <div><div class="eyebrow">Centro de control / Entregas</div><h1>Riesgo de retrasos</h1></div>
+    <div class="pill">MODELO ACTIVO · MODELO 2</div>
+  </header>
+  <section class="stats">
+    <div class="stat"><div class="stat-head">Pedidos evaluados <span>▦</span></div><div class="num" id="total">0</div><div class="hint">En esta sesión del navegador</div></div>
+    <div class="stat"><div class="stat-head">Sin riesgo detectado <span class="dot" style="background:var(--green)"></span></div><div class="num" id="safe">0</div><div class="hint">Predicciones clase 0</div></div>
+    <div class="stat"><div class="stat-head">Con riesgo detectado <span class="dot" style="background:var(--red)"></span></div><div class="num" id="risk">0</div><div class="hint">Predicciones clase 1</div></div>
+    <div class="stat"><div class="stat-head">Riesgo alto <span class="dot" style="background:var(--amber)"></span></div><div class="num" id="high">0</div><div class="hint">Probabilidad ≥ 80%</div></div>
+  </section>
+  <section class="columns">
+    <div class="panel">
+      <h2>Evaluar un pedido</h2>
+      <p class="sub">Introduce las características del pedido y ejecuta la predicción del modelo.</p>
+      <form id="formulario">
+        <label><span>Modalidad de envío</span><select name="shipping_mode"><option>Standard Class</option><option>Second Class</option><option>First Class</option><option>Same Day</option></select></label>
+        <label><span>Segmento del cliente</span><select name="customer_segment"><option>Consumer</option><option>Corporate</option><option>Home Office</option></select></label>
+        <label><span>Días de envío programados</span><input name="scheduled_days" type="number" min="0" step="0.1" value="4" required></label>
+        <label><span>Días reales de envío</span><input name="real_days" type="number" min="0" step="0.1" value="5" required></label>
+        <label class="wide"><span>Tipo de transacción</span><select name="order_type"><option>DEBIT</option><option>TRANSFER</option><option>PAYMENT</option><option>CASH</option></select></label>
+        <button class="wide" id="submit" type="submit">ANALIZAR PEDIDO →</button>
+      </form>
+      <div class="notice"><strong>Nota metodológica:</strong> el modelo actual utiliza los días reales de envío, dato que se conoce después de la entrega. Por ello, esta versión demuestra la integración del modelo, pero todavía no es una predicción anticipada operativa.</div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2>Resultado de la predicción</h2>
+        <p class="sub">Clasificación y probabilidad estimada para el pedido evaluado.</p>
+        <div class="result-box" id="resultado" aria-live="polite"><h3>Esperando datos</h3><p class="result-meta">Completa el formulario y selecciona “Analizar pedido”.</p></div>
+      </div>
+      <div class="panel critical">
+        <h2>Pedidos evaluados recientemente</h2>
+        <p class="sub">Historial de esta sesión, de más reciente a más antiguo.</p>
+        <table><thead><tr><th>Pedido</th><th>Probabilidad</th><th>Estado</th></tr></thead><tbody id="history"><tr><td colspan="3" class="empty">Aún no hay predicciones.</td></tr></tbody></table>
+      </div>
+    </div>
+  </section>
+</main>
 </div>
 <script>
-const form = document.getElementById("formulario");
-const result = document.getElementById("resultado");
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const button = document.getElementById("submit");
-    button.disabled = true;
-    button.textContent = "PROCESANDO...";
-    result.textContent = "Calculando predicción...";
-    const payload = Object.fromEntries(new FormData(form).entries());
-    try {
-        const response = await fetch("/predict", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.detail || "No fue posible realizar la predicción.");
-        result.innerHTML =
-            '<h2>' + data.result + '</h2>' +
-            '<p><strong>Probabilidad:</strong> ' + (data.probability*100).toFixed(2) + '%</p>' +
-            '<p><strong>Predicción:</strong> ' + data.prediction + '</p>' +
-            '<p><strong>Umbral:</strong> ' + data.threshold + '</p>';
-    } catch (error) {
-        result.textContent = "Error: " + error.message;
-    } finally {
-        button.disabled = false;
-        button.textContent = "PREDECIR";
-    }
+const form=document.getElementById("formulario"), result=document.getElementById("resultado"), button=document.getElementById("submit");
+let total=0,safe=0,risk=0,high=0,history=[];
+function updateStats(){document.getElementById("total").textContent=total;document.getElementById("safe").textContent=safe;document.getElementById("risk").textContent=risk;document.getElementById("high").textContent=high;}
+function addHistory(prob,pred){history.unshift({id:"#"+String(total).padStart(4,"0"),prob,pred});history=history.slice(0,5);document.getElementById("history").innerHTML=history.map(x=>'<tr><td>'+x.id+'</td><td>'+x.prob.toFixed(2)+'%</td><td class="'+(x.pred?'risk-high':'risk-low')+'">'+(x.pred?'Riesgo':'Sin riesgo')+'</td></tr>').join("");}
+form.addEventListener("submit",async e=>{
+ e.preventDefault();button.disabled=true;button.textContent="ANALIZANDO...";result.innerHTML="<p>El modelo está procesando los datos…</p>";
+ const payload=Object.fromEntries(new FormData(form).entries());
+ try{
+  const response=await fetch("/predict",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json();if(!response.ok)throw new Error(data.detail||"No fue posible realizar la predicción.");
+  const pct=data.probability*100,isRisk=Boolean(data.prediction),level=pct>=80?"ALTO":pct>=50?"MODERADO":"BAJO";
+  total++;if(isRisk)risk++;else safe++;if(pct>=80)high++;updateStats();addHistory(pct,data.prediction);
+  result.innerHTML='<div class="result-main '+(isRisk?'risk-high':'risk-low')+'">'+(isRisk?'● RIESGO DE RETRASO':'● SIN RIESGO DETECTADO')+'</div><p>Probabilidad estimada</p><div class="result-main">'+pct.toFixed(2)+'%</div><div class="probbar"><div class="probfill" style="width:'+Math.max(0,Math.min(100,pct))+'%"></div></div><p><strong>Nivel de riesgo:</strong> '+level+'</p><p class="result-meta">Clase predicha: '+data.prediction+' · Umbral del modelo: '+(data.threshold*100).toFixed(0)+'%</p>';
+ }catch(err){result.innerHTML='<h3 class="risk-high">No se pudo completar</h3><p class="result-meta"></p>';result.querySelector(".result-meta").textContent=err.message;}
+ finally{button.disabled=false;button.textContent="ANALIZAR PEDIDO →";}
 });
 </script>
 </body>
