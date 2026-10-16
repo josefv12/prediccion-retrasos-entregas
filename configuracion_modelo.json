@@ -1,0 +1,25 @@
+{
+  "target": "Late_delivery_risk",
+  "features": [
+    "Shipping Mode",
+    "Days for shipment (scheduled)",
+    "Days for shipping (real)",
+    "Customer Segment",
+    "Type"
+  ],
+  "categorical_features": [
+    "Shipping Mode",
+    "Customer Segment",
+    "Type"
+  ],
+  "numeric_features": [
+    "Days for shipment (scheduled)",
+    "Days for shipping (real)"
+  ],
+  "threshold": 0.5,
+  "model_name": "Modelo 2",
+  "classes": {
+    "0": "No retraso",
+    "1": "Retraso"
+  }
+}
